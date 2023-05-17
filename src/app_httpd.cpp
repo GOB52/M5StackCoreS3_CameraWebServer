@@ -41,9 +41,8 @@ static esp_err_t bmp_handler(httpd_req_t *req)
     camera_fb_t *fb = NULL;
     esp_err_t res = ESP_OK;
 
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
     uint64_t fr_start = esp_timer_get_time();
-#endif
+
     fb = esp_camera_fb_get();
     if (!fb)
     {
@@ -71,10 +70,11 @@ static esp_err_t bmp_handler(httpd_req_t *req)
     }
     res = httpd_resp_send(req, (const char *)buf, buf_len);
     free(buf);
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
+
     uint64_t fr_end = esp_timer_get_time();
+    (void)fr_start;
+    (void)fr_end;
     log_d("BMP: %llums, %uB", (uint64_t)((fr_end - fr_start) / 1000), buf_len);
-#endif
     return res;
 }
 
@@ -97,9 +97,7 @@ static esp_err_t capture_handler(httpd_req_t *req)
 {
     camera_fb_t *fb = NULL;
     esp_err_t res = ESP_OK;
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
     int64_t fr_start = esp_timer_get_time();
-#endif
 
     fb = esp_camera_fb_get();
     if (!fb)
@@ -117,31 +115,27 @@ static esp_err_t capture_handler(httpd_req_t *req)
     snprintf(ts, 32, "%ld.%06ld", fb->timestamp.tv_sec, fb->timestamp.tv_usec);
     httpd_resp_set_hdr(req, "X-Timestamp", (const char *)ts);
 
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
-        size_t fb_len = 0;
-#endif
-        if (fb->format == PIXFORMAT_JPEG)
-        {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
-            fb_len = fb->len;
-#endif
-            res = httpd_resp_send(req, (const char *)fb->buf, fb->len);
-        }
-        else
-        {
-            jpg_chunking_t jchunk = {req, 0};
-            res = frame2jpg_cb(fb, 80, jpg_encode_stream, &jchunk) ? ESP_OK : ESP_FAIL;
-            httpd_resp_send_chunk(req, NULL, 0);
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
-            fb_len = jchunk.len;
-#endif
-        }
-        esp_camera_fb_return(fb);
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
-        int64_t fr_end = esp_timer_get_time();
-        log_d("JPG: %uB %ums", (uint32_t)(fb_len), (uint32_t)((fr_end - fr_start) / 1000));
-#endif
-        return res;
+    size_t fb_len = 0;
+    if (fb->format == PIXFORMAT_JPEG)
+    {
+        fb_len = fb->len;
+        res = httpd_resp_send(req, (const char *)fb->buf, fb->len);
+    }
+    else
+    {
+        jpg_chunking_t jchunk = {req, 0};
+        res = frame2jpg_cb(fb, 80, jpg_encode_stream, &jchunk) ? ESP_OK : ESP_FAIL;
+        httpd_resp_send_chunk(req, NULL, 0);
+        fb_len = jchunk.len;
+    }
+    esp_camera_fb_return(fb);
+
+    int64_t fr_end = esp_timer_get_time();
+    (void)fr_start;
+    (void)fr_end;
+    (void)fb_len;
+    log_d("JPG: %uB %ums", (uint32_t)(fb_len), (uint32_t)((fr_end - fr_start) / 1000));
+    return res;
 }
 
 static esp_err_t stream_handler(httpd_req_t *req)
@@ -232,7 +226,7 @@ static esp_err_t stream_handler(httpd_req_t *req)
         frame_time /= 1000;
 
         log_d("MJPG: %uB %ums (%.1ffps)",
-                (uint32_t)(_jpg_buf_len), (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time);
+              (uint32_t)(_jpg_buf_len), (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time);
     }
     return res;
 }
@@ -329,9 +323,11 @@ static esp_err_t cmd_handler(httpd_req_t *req)
     return httpd_resp_send(req, NULL, 0);
 }
 
+#if 0
 static int print_reg(char * p, sensor_t * s, uint16_t reg, uint32_t mask){
     return sprintf(p, "\"0x%x\":%u,", reg, s->get_reg(s, reg, mask));
 }
+#endif
 
 static esp_err_t status_handler(httpd_req_t *req)
 {
@@ -449,7 +445,7 @@ static esp_err_t index_handler(httpd_req_t *req)
 
     if(s && s->id.PID == GC0308_PID)
     {
-       return httpd_resp_send(req, (const char *)index_gc0308_html_gz, index_gc0308_html_gz_len);
+        return httpd_resp_send(req, (const char *)index_gc0308_html_gz, index_gc0308_html_gz_len);
     }
     log_e("Camera sensor not found");
     return httpd_resp_send_500(req);
