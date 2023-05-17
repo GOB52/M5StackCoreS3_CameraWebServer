@@ -38,7 +38,7 @@ Please save the credential in some way or rewrite the source.
 ```
 
 ## Browser screen description
-### Basic functionality
+### Basic settings
 * Resolution  
 The currently set camera resolution is displayed. The resolution cannot be changed.
 * Contrast  
@@ -84,7 +84,7 @@ Download incoming images.
 * X  
 Stop receiving stream.
 
-### Extended functionality
+### Advanced settings
 * Register Get/Set  
 The values can be set and retrieved for the camera registers.  
 Refer to data sheets and other sources for register and function information.  
