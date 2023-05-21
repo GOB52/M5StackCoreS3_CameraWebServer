@@ -38,7 +38,7 @@ void setup()
     // M5
     M5.begin();
     M5.Log.setEnableColor(m5::log_target_serial, false);
-    
+
     // Camera
     camera_config_t ccfg{};
     ccfg.pin_pwdn  = CAM_PIN_PWDN;
@@ -63,8 +63,10 @@ void setup()
     ccfg.pixel_format = PIXFORMAT_RGB565;
     //ccfg.frame_size = FRAMESIZE_VGA; // 640x480
     ccfg.frame_size = FRAMESIZE_QVGA; // 320x240
+    //ccfg.frame_size = FRAMESIZE_240X240,  // 240x240
     //ccfg.frame_size = FRAMESIZE_QQVGA; // 160x120
     ccfg.fb_count = 1;
+    //ccfg.fb_count = 2; // CPU Loads too much but faster
     ccfg.grab_mode = CAMERA_GRAB_WHEN_EMPTY;    
     ccfg.sccb_i2c_port = M5.In_I2C.getPort(); // Using initialized I2C
 
@@ -81,8 +83,8 @@ void setup()
     {
         M5_LOGE("Failed to complement GC0308");
     }
-    M5.Display.clear(TFT_DARKGREEN);
 
+    M5.Display.clear(TFT_DARKGREEN);
     // WiFi
     WiFi.begin(); // // Connects to credential stored in the hardware.
     //WiFi.begin("Your SSID", "Your password"); // or use it.
@@ -114,5 +116,6 @@ void setup()
 
 void loop()
 {
+    //    M5_LOGI("%u", esp_get_free_heap_size());
     delay(10000);
 }

@@ -2,7 +2,7 @@
 
 [日本語](README.md)
 
-<img src="./M5StackCoreS3_CameraWebServer.jpg" width="480">
+<img src="https://user-images.githubusercontent.com/26270227/239725404-c5dd33c4-c511-4d05-a192-3d184ef4de8b.png" width="480">
 
 ## Overview
 Porting of [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32) example [CameraWebServer](https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Camera/CameraWebServer) to M5Stack CoreS3 (GC0308).  
@@ -15,6 +15,12 @@ Access CoreS3 from a browser via WiFi to control the camera and receive streamin
 However, If you set platform = espressif32 and framework = arduino in platformio, esp32-camera is included in the package, so you do not need to specify es32-camera in lib_deps.
 * [gob_GC0308](https://github.com/GOB52/gob_GC0308)
 * WiFi connection available
+
+## Build type
+|Env|Description|
+|---|---|
+|release|Basic settings|
+|release_face|Support dace detection and recognition|
 
 ## How to use
 Once executed, the IP address will be displayed on the screen and on the serial monitor.  
@@ -75,10 +81,21 @@ Changes the horizontal image inversion.
 Changes the vertical image inversion.
 * Color Bar  
 Color bar display ON/OFF.
+
+* Face Detection  
+Face detection ON/OFF
+* Face Recognition
+Face Recognition ON/OFF  
+**Note: Face recognition is a very heavy process.**
+
 * Get Still  
 Obtains a still image.
 * Start/Stop Stream  
 Start/Stop receiving stream.
+* Enroll Face  
+Enroll the face on the camera.  
+Once enrolled, the face will no longer be treated as an intruder (red frame) if Face Recogintion is ON.
+
 * Save  
 Download incoming images.
 * X  
@@ -91,7 +108,7 @@ Refer to data sheets and other sources for register and function information.
 **Caution** <ins>Be careful not to set inappropriate values to inappropriate registers. </ins>
 
 ## Changes from the original
-* The application is now dedicated to M5Stack Core3.
+* The application is now dedicated to M5Stack CoreS3.
 * M5Unified base to work.
 * Modified html for GC0308.
 * Functions not present in GC0308 were omitted.
