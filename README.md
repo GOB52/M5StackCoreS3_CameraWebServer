@@ -2,7 +2,7 @@
 
 [English](README.en.md)
 
-<img src="./M5StackCoreS3_CameraWebServer.jpg" width="480">
+<img src="https://user-images.githubusercontent.com/26270227/239725404-c5dd33c4-c511-4d05-a192-3d184ef4de8b.png" width="480">
 
 ## 概要
 [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32) の [CameraWebServer](https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Camera/CameraWebServer) を M5Stack CoreS3 向けに移植した物です。  
@@ -15,6 +15,13 @@ WiFi 経由でブラウザから CoreS3 へアクセスし、カメラの制御�
 platformio で platform = espressif32, framework = arduino なら同梱なので必要無し
 * [gob_GC0308](https://github.com/GOB52/gob_GC0308)
 * WiFi 接続可能な環境
+
+## ビルド種別
+|Env|説明|
+|---|---|
+|release|基本設定|
+|release_face|顔検出、認識あり|
+
 
 ## 使い方
 実行すると、画面とシリアルモニタに接続先 IP アドレスが表示されます。  
@@ -76,10 +83,21 @@ platformio で platform = espressif32, framework = arduino なら同梱なので
 垂直方向の画像反転を変更します。
 * Color Bar  
 カラーバー表示の ON/OFF
+
+* Face Detection  
+顔検知機能の ON/OFF
+* Face Recognition  
+顔認識機能の ON/OFF  
+**注 顔認識は処理がとても重くなります。**
+
 * Get Still  
 静止画像取得
 * Start/Stop Stream  
 ストリーム受信の開始/終了
+* Enroll Face  
+カメラに写っている顔を登録します。  
+登録すると Face Recogintion ON の時に侵入者(赤枠)扱いになりません。
+
 * Save  
 受信画像をダウンロードします。
 * X  
@@ -92,7 +110,7 @@ platformio で platform = espressif32, framework = arduino なら同梱なので
 **注意** <ins>適切でない値を適切でないレジスタへ設定しないように気をつけてください。</ins>
 
 ## オリジナルからの変更点
-* M5StackCore3 専用のアプリケーションになった。
+* M5StackCoreS3 専用のアプリケーションになった。
 * M5Unified ベースで動作するようにした。
 * GC0308 用に html を修正した。
 * GC0308 に無い機能を割愛した。
