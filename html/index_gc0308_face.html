@@ -1,0 +1,915 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>M5StackCoreS3 GC0308</title>
+        <style>
+            body {
+                font-family: Arial,Helvetica,sans-serif;
+                background: #181818;
+                color: #EFEFEF;
+                font-size: 16px
+            }
+
+            h2 {
+                font-size: 18px
+            }
+
+            section.main {
+                display: flex
+            }
+
+            #menu,section.main {
+                flex-direction: column
+            }
+
+            #menu {
+                display: none;
+                flex-wrap: nowrap;
+                min-width: 384px;
+                background: #363636;
+                padding: 8px;
+                border-radius: 4px;
+                margin-top: -10px;
+                margin-right: 10px;
+            }
+
+            #content {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: stretch
+            }
+
+            figure {
+                padding: 0px;
+                margin: 0;
+                -webkit-margin-before: 0;
+                margin-block-start: 0;
+                -webkit-margin-after: 0;
+                margin-block-end: 0;
+                -webkit-margin-start: 0;
+                margin-inline-start: 0;
+                -webkit-margin-end: 0;
+                margin-inline-end: 0
+            }
+
+            figure img {
+                display: block;
+                width: 100%;
+                height: auto;
+                border-radius: 4px;
+                margin-top: 8px;
+            }
+
+            @media (min-width: 800px) and (orientation:landscape) {
+                #content {
+                    display:flex;
+                    flex-wrap: nowrap;
+                    align-items: stretch
+                }
+
+                figure img {
+                    display: block;
+                    max-width: 100%;
+                    max-height: calc(100vh - 40px);
+                    width: auto;
+                    height: auto
+                }
+
+                figure {
+                    padding: 0 0 0 0px;
+                    margin: 0;
+                    -webkit-margin-before: 0;
+                    margin-block-start: 0;
+                    -webkit-margin-after: 0;
+                    margin-block-end: 0;
+                    -webkit-margin-start: 0;
+                    margin-inline-start: 0;
+                    -webkit-margin-end: 0;
+                    margin-inline-end: 0
+                }
+            }
+
+            section#buttons {
+                display: flex;
+                flex-wrap: nowrap;
+                justify-content: space-evenly
+            }
+
+            #nav-toggle {
+                cursor: pointer;
+                display: block
+            }
+
+            #nav-toggle-cb {
+                outline: 0;
+                opacity: 0;
+                width: 0;
+                height: 0
+            }
+
+            #nav-toggle-cb:checked+#menu {
+                display: flex
+            }
+
+            .input-group {
+                display: flex;
+                flex-wrap: nowrap;
+                line-height: 22px;
+                margin: 5px 0
+            }
+
+            .input-group>label {
+                display: inline-block;
+                padding-right: 10px;
+                min-width: 47%
+            }
+
+            .input-group input,.input-group select {
+                flex-grow: 1
+            }
+
+            .range-max,.range-min {
+                display: inline-block;
+                padding: 0 5px
+            }
+
+            button, .button {
+                display: block;
+                margin: 5px;
+                padding: 0 12px;
+                border: 0;
+                line-height: 28px;
+                cursor: pointer;
+                color: #fff;
+                background: #ff3034;
+                border-radius: 5px;
+                font-size: 16px;
+                outline: 0
+            }
+
+            .save {
+                position: absolute;
+                right: 25px;
+                top: 0px;
+                height: 16px;
+                line-height: 16px;
+                padding: 0 4px;
+                text-decoration: none;
+                cursor: pointer
+            }
+
+            button:hover {
+                background: #ff494d
+            }
+
+            button:active {
+                background: #f21c21
+            }
+
+            button.disabled {
+                cursor: default;
+                background: #a0a0a0
+            }
+
+            input[type=range] {
+                -webkit-appearance: none;
+                width: 100%;
+                height: 22px;
+                background: #363636;
+                cursor: pointer;
+                margin: 0
+            }
+
+            input[type=range]:focus {
+                outline: 0
+            }
+
+            input[type=range]::-webkit-slider-runnable-track {
+                width: 100%;
+                height: 2px;
+                cursor: pointer;
+                background: #EFEFEF;
+                border-radius: 0;
+                border: 0 solid #EFEFEF
+            }
+
+            input[type=range]::-webkit-slider-thumb {
+                border: 1px solid rgba(0,0,30,0);
+                height: 22px;
+                width: 22px;
+                border-radius: 50px;
+                background: #ff3034;
+                cursor: pointer;
+                -webkit-appearance: none;
+                margin-top: -11.5px
+            }
+
+            input[type=range]:focus::-webkit-slider-runnable-track {
+                background: #EFEFEF
+            }
+
+            input[type=range]::-moz-range-track {
+                width: 100%;
+                height: 2px;
+                cursor: pointer;
+                background: #EFEFEF;
+                border-radius: 0;
+                border: 0 solid #EFEFEF
+            }
+
+            input[type=range]::-moz-range-thumb {
+                border: 1px solid rgba(0,0,30,0);
+                height: 22px;
+                width: 22px;
+                border-radius: 50px;
+                background: #ff3034;
+                cursor: pointer
+            }
+
+            input[type=range]::-ms-track {
+                width: 100%;
+                height: 2px;
+                cursor: pointer;
+                background: 0 0;
+                border-color: transparent;
+                color: transparent
+            }
+
+            input[type=range]::-ms-fill-lower {
+                background: #EFEFEF;
+                border: 0 solid #EFEFEF;
+                border-radius: 0
+            }
+
+            input[type=range]::-ms-fill-upper {
+                background: #EFEFEF;
+                border: 0 solid #EFEFEF;
+                border-radius: 0
+            }
+
+            input[type=range]::-ms-thumb {
+                border: 1px solid rgba(0,0,30,0);
+                height: 22px;
+                width: 22px;
+                border-radius: 50px;
+                background: #ff3034;
+                cursor: pointer;
+                height: 2px
+            }
+
+            input[type=range]:focus::-ms-fill-lower {
+                background: #EFEFEF
+            }
+
+            input[type=range]:focus::-ms-fill-upper {
+                background: #363636
+            }
+
+            .switch {
+                display: block;
+                position: relative;
+                line-height: 22px;
+                font-size: 16px;
+                height: 22px
+            }
+
+            .switch input {
+                outline: 0;
+                opacity: 0;
+                width: 0;
+                height: 0
+            }
+
+            .slider {
+                width: 50px;
+                height: 22px;
+                border-radius: 22px;
+                cursor: pointer;
+                background-color: grey
+            }
+
+            .slider,.slider:before {
+                display: inline-block;
+                transition: .4s
+            }
+
+            .slider:before {
+                position: relative;
+                content: "";
+                border-radius: 50%;
+                height: 16px;
+                width: 16px;
+                left: 4px;
+                top: 3px;
+                background-color: #fff
+            }
+
+            input:checked+.slider {
+                background-color: #ff3034
+            }
+
+            input:checked+.slider:before {
+                -webkit-transform: translateX(26px);
+                transform: translateX(26px)
+            }
+
+            select {
+                border: 1px solid #363636;
+                font-size: 14px;
+                height: 22px;
+                outline: 0;
+                border-radius: 5px
+            }
+
+            .image-container {
+                position: relative;
+                min-width: 160px
+            }
+
+            .close {
+                position: absolute;
+                right: 5px;
+                top: 5px;
+                background: #ff3034;
+                width: 16px;
+                height: 16px;
+                border-radius: 100px;
+                color: #fff;
+                text-align: center;
+                line-height: 18px;
+                cursor: pointer
+            }
+
+            .hidden {
+                display: none
+            }
+
+            input[type=text] {
+                border: 1px solid #363636;
+                font-size: 14px;
+                height: 20px;
+                margin: 1px;
+                outline: 0;
+                border-radius: 5px
+            }
+
+            .inline-button {
+                line-height: 20px;
+                margin: 2px;
+                padding: 1px 4px 2px 4px;
+            }
+
+            label.toggle-section-label {
+                cursor: pointer;
+                display: block
+            }
+
+            input.toggle-section-button {
+                outline: 0;
+                opacity: 0;
+                width: 0;
+                height: 0
+            }
+
+            input.toggle-section-button:checked+section.toggle-section {
+                display: none
+            }
+
+
+        </style>
+    </head>
+    <body>
+        <section class="main">
+            <div id="logo">
+                <label for="nav-toggle-cb" id="nav-toggle">&#9776;&nbsp;&nbsp;Toggle CoreS3 GC0308 settings</label>
+            </div>
+            <div id="content">
+                <div id="sidebar">
+                    <input type="checkbox" id="nav-toggle-cb" checked="checked">
+                    <nav id="menu">
+                        <div class="input-group" id="framesize-group">
+                            <label for="framesize">Resolution</label>
+                            <!-- <select id="framesize" class="default-action"> -->
+                            <select id="framesize" class="default-action disabled" disabled="disabled">
+                                <option value="8">VGA(640x480)</option>
+                                <option value="7">HVGA(480x320)</option>
+                                <option value="6">CIF(400x296)</option>
+                                <option value="5">QVGA(320x240)</option>
+                                <option value="4">240x240</option>
+                                <option value="3">HQVGA(240x176)</option>
+                                <option value="2">QCIF(176x144)</option>
+                                <option value="1">QQVGA(160x120)</option>
+                                <option value="0">96x96</option>
+                            </select>
+                        </div>
+			
+			<hr style="width:75%">
+
+                        <div class="input-group" id="contrast-group">
+                            <label for="contrast">Contrast</label>
+                            <div class="range-min">-2</div>
+                            <input type="range" id="contrast" min="0" max="127" value="64" class="default-action">
+                            <div class="range-max">2</div>
+                        </div>
+
+                        <div class="input-group" id="saturation-group">
+                            <label for="saturation">Saturation</label>
+                            <div class="range-min">0</div>
+                            <input type="range" id="saturation" min="0" max="255" value="64" class="default-action">
+                            <div class="range-max">255</div>
+                        </div>
+
+			<div class="input-group" id="special_effect-group">
+                            <label for="special_effect">Special Effect</label>
+                            <select id="special_effect" class="default-action">
+                                <option value="0" selected="selected">No Effect</option>
+                                <option value="1">Negative</option>
+                                <option value="2">Grayscale</option>
+                                <option value="3">Red Tint</option>
+                                <option value="4">Green Tint</option>
+                                <option value="5">Blue Tint</option>
+                                <option value="6">Sepia</option>
+                            </select>
+                        </div>
+                        <div class="input-group" id="wb_mode-group">
+                            <label for="wb_mode">WB Mode</label>
+                            <select id="wb_mode" class="default-action">
+                                <option value="0" selected="selected">Auto</option>
+                                <option value="1">Sunny</option>
+                                <option value="2">Cloudy</option>
+                                <option value="3">Office</option>
+                                <option value="4">Home</option>
+                            </select>
+                        </div>
+                        <div class="input-group" id="agc_gain-group">
+                            <label for="agc_gain">Gain</label>
+                            <div class="range-min">0x</div>
+                            <input type="range" id="agc_gain" min="0" max="63" value="20" class="default-action">
+                            <div class="range-max">4x</div>
+                        </div>
+                        <div class="input-group" id="hmirror-group">
+                            <label for="hmirror">H-Mirror</label>
+                            <div class="switch">
+                                <input id="hmirror" type="checkbox" class="default-action" checked="checked">
+                                <label class="slider" for="hmirror"></label>
+                            </div>
+                        </div>
+                        <div class="input-group" id="vflip-group">
+                            <label for="vflip">V-Flip</label>
+                            <div class="switch">
+                                <input id="vflip" type="checkbox" class="default-action" checked="checked">
+                                <label class="slider" for="vflip"></label>
+                            </div>
+                        </div>
+                        <div class="input-group" id="colorbar-group">
+                            <label for="colorbar">Color Bar</label>
+                            <div class="switch">
+                                <input id="colorbar" type="checkbox" class="default-action">
+                                <label class="slider" for="colorbar"></label>
+                            </div>
+                        </div>
+
+			<hr style="width:75%">
+
+                        <div class="input-group" id="face_detect-group">
+                            <label for="face_detect">Face Detection</label>
+                            <div class="switch">
+                                <input id="face_detect" type="checkbox" class="default-action">
+                                <label class="slider" for="face_detect"></label>
+                            </div>
+                        </div>
+                        <div class="input-group" id="face_recognize-group">
+                            <label for="face_recognize">Face Recognition</label>
+                            <div class="switch">
+                                <input id="face_recognize" type="checkbox" class="default-action">
+                                <label class="slider" for="face_recognize"></label>
+                            </div>
+                        </div>
+
+			<hr style="width:75%">
+
+			<section id="buttons">
+                            <button id="get-still">Get Still</button>
+                            <button id="toggle-stream">Start Stream</button>
+                            <button id="face_enroll" class="disabled" disabled="disabled">Enroll Face</button>
+                        </section>
+
+                        <div style="margin-top: 8px;"><center><span style="font-weight: bold;">Advanced Settings</span></center></div>
+                        <hr style="width:100%">
+                        <label for="nav-toggle-reg" class="toggle-section-label">&#9776;&nbsp;&nbsp;Register Get/Set</label><input type="checkbox" id="nav-toggle-reg" class="hidden toggle-section-button" checked="checked">
+                        <section class="toggle-section">
+                            <!--h4>Set Register</h4-->
+                            <div class="input-group" id="set-reg-group">
+                                <label for="set-reg">Reg, Mask, Value</label>
+                                <div class="text">
+                                    <input id="reg-addr" type="text" minlength="4" maxlength="6" size="6" value="0x00">
+                                </div>
+                                <div class="text">
+                                    <input id="reg-mask" type="text" minlength="4" maxlength="4" size="4" value="0xff">
+                                </div>
+                                <div class="text">
+                                    <input id="reg-value" type="text" minlength="4" maxlength="4" size="4" value="0x00">
+                                </div>
+                                <button class="inline-button" id="set-reg">Set</button>
+                            </div>
+                            <hr style="width:50%">
+                            <!--h4>Get Register</h4-->
+                            <div class="input-group" id="get-reg-group">
+                                <label for="get-reg">Reg, Mask</label>
+                                <div class="text">
+                                    <input id="get-reg-addr" type="text" minlength="4" maxlength="6" size="6" value="0x00">
+                                </div>
+                                <div class="text">
+                                    <input id="get-reg-mask" type="text" minlength="4" maxlength="6" size="6" value="0xff">
+                                </div>
+                                <button class="inline-button" id="get-reg">Get</button>
+                            </div>
+                            <div class="input-group">
+                                <label for="get-reg-value">Value</label>
+                                <div class="text">
+                                    <span id="get-reg-value">0x00</span>
+                                </div>
+                            </div>
+                        </section>
+                        <hr style="width:100%">
+                        
+                    </nav>
+                </div>
+                <figure>
+                    <div id="stream-container" class="image-container hidden">
+                        <a id="save-still" href="#" class="button save" download="capture.jpg">Save</a>
+                        <div class="close" id="close-stream">×</div>
+                        <img id="stream" src="" crossorigin>
+                    </div>
+                </figure>
+            </div>
+        </section>
+        <script>
+document.addEventListener('DOMContentLoaded', function (event) {
+  var baseHost = document.location.origin
+  var streamUrl = baseHost + ':81'
+
+  function fetchUrl(url, cb){
+    fetch(url)
+      .then(function (response) {
+        if (response.status !== 200) {
+          cb(response.status, response.statusText);
+        } else {
+          response.text().then(function(data){
+            cb(200, data);
+          }).catch(function(err) {
+            cb(-1, err);
+          });
+        }
+      })
+      .catch(function(err) {
+        cb(-1, err);
+      });
+  }
+
+  function setReg(reg, offset, mask, value, cb){
+    console.log('Set Reg', '0x'+reg.toString(16), offset, '0x'+mask.toString(16), '0x'+value.toString(16), '('+value+')');
+    value = (value & mask) << offset;
+    mask = mask << offset;
+    fetchUrl(`${baseHost}/reg?reg=${reg}&mask=${mask}&val=${value}`, cb);
+  }
+
+  function getReg(reg, offset, mask, cb){
+    mask = mask << offset;
+    fetchUrl(`${baseHost}/greg?reg=${reg}&mask=${mask}`, function(code, txt){
+      let value = 0;
+      if(code == 200){
+        value = parseInt(txt);
+        value = (value & mask) >> offset;
+        txt = ''+value;
+      }
+      cb(code, txt);
+    });
+  }
+
+  const setRegButton = document.getElementById('set-reg')
+  setRegButton.onclick = () => {
+    let reg = parseInt(document.getElementById('reg-addr').value);
+    let mask = parseInt(document.getElementById('reg-mask').value);
+    let value = parseInt(document.getElementById('reg-value').value);
+
+    setReg(reg, 0, mask, value, function(code, txt){
+      if(code != 200){
+        alert('Error['+code+']: '+txt);
+      }
+    });
+  }
+
+  const getRegButton = document.getElementById('get-reg')
+  getRegButton.onclick = () => {
+    let reg = parseInt(document.getElementById('get-reg-addr').value);
+    let mask = parseInt(document.getElementById('get-reg-mask').value);
+    let value = document.getElementById('get-reg-value');
+
+    getReg(reg, 0, mask, function(code, txt){
+      if(code != 200){
+        value.innerHTML = 'Error['+code+']: '+txt;
+      } else {
+        value.innerHTML = '0x'+parseInt(txt).toString(16)+' ('+txt+')';
+      }
+    });
+  }
+
+  const setRegValue = (el) => {
+    let reg = el.attributes.reg?parseInt(el.attributes.reg.nodeValue):0;
+    let offset = el.attributes.offset?parseInt(el.attributes.offset.nodeValue):0;
+    let mask = el.attributes.mask?parseInt(el.attributes.mask.nodeValue):255;
+    let value = 0;
+    switch (el.type) {
+      case 'checkbox':
+        value = el.checked ? mask : 0;
+        break;
+      case 'range':
+      case 'text':
+      case 'select-one':
+        value = el.value;
+        break
+      default:
+        return;
+    }
+
+    setReg(reg, offset, mask, value, function(code, txt){
+      if(code != 200){
+        alert('Error['+code+']: '+txt);
+      }
+    });
+  }
+
+  // Attach on change action for register elements
+  document
+    .querySelectorAll('.reg-action')
+    .forEach(el => {
+        if (el.type === 'text') {
+            el.onkeyup = function(e){
+                if(e.keyCode == 13){
+                    setRegValue(el);
+                }
+            }
+        } else {
+            el.onchange = () => setRegValue(el)
+        }
+    })
+
+
+  const updateRegValue = (el, value, updateRemote) => {
+    let initialValue;
+    let offset = el.attributes.offset?parseInt(el.attributes.offset.nodeValue):0;
+    let mask = (el.attributes.mask?parseInt(el.attributes.mask.nodeValue):255) << offset;
+    value = (value & mask) >> offset;
+    if (el.type === 'checkbox') {
+      initialValue = el.checked
+      value = !!value
+      el.checked = value
+    } else {
+      initialValue = el.value
+      el.value = value
+    }
+  }
+
+
+  const printReg = (el) => {
+    let reg = el.attributes.reg?parseInt(el.attributes.reg.nodeValue):0;
+    let offset = el.attributes.offset?parseInt(el.attributes.offset.nodeValue):0;
+    let mask = el.attributes.mask?parseInt(el.attributes.mask.nodeValue):255;
+    let value = 0;
+    switch (el.type) {
+      case 'checkbox':
+        value = el.checked ? mask : 0;
+        break;
+      case 'range':
+      case 'select-one':
+        value = el.value;
+        break
+      default:
+        return;
+    }
+    value = (value & mask) << offset;
+    return '0x'+reg.toString(16)+', 0x'+value.toString(16);
+  }
+
+  const hide = el => {
+    el.classList.add('hidden')
+  }
+  const show = el => {
+    el.classList.remove('hidden')
+  }
+
+  const disable = el => {
+    el.classList.add('disabled')
+    el.disabled = true
+  }
+
+  const enable = el => {
+    el.classList.remove('disabled')
+    el.disabled = false
+  }
+
+  const updateValue = (el, value, updateRemote) => {
+    updateRemote = updateRemote == null ? true : updateRemote
+    let initialValue
+    if (el.type === 'checkbox') {
+      initialValue = el.checked
+      value = !!value
+      el.checked = value
+    } else {
+      initialValue = el.value
+      el.value = value
+    }
+
+    if (updateRemote && initialValue !== value) {
+      updateConfig(el);
+    } else if(!updateRemote){
+      if(el.id === "aec"){
+        value ? hide(exposure) : show(exposure)
+      } else if(el.id === "agc"){
+        if (value) {
+        } else {
+        }
+      } else if(el.id === "awb_gain"){
+        value ? show(wb) : hide(wb)
+      } else if(el.id === "face_recognize") {
+	value ? enable(enrollButton) : disable(enrollButton)
+      }
+    }
+  }
+
+  function updateConfig (el) {
+    let value
+    switch (el.type) {
+      case 'checkbox':
+        value = el.checked ? 1 : 0
+        break
+      case 'range':
+      case 'select-one':
+        value = el.value
+        break
+      case 'button':
+      case 'submit':
+        value = '1'
+        break
+      default:
+        return
+    }
+
+    const query = `${baseHost}/control?var=${el.id}&val=${value}`
+
+    fetch(query)
+      .then(response => {
+        console.log(`request to ${query} finished, status: ${response.status}`)
+      })
+  }
+
+  document
+    .querySelectorAll('.close')
+    .forEach(el => {
+      el.onclick = () => {
+        hide(el.parentNode)
+      }
+    })
+
+  // read initial values
+  fetch(`${baseHost}/status`)
+    .then(function (response) {
+      return response.json()
+    })
+    .then(function (state) {
+      document
+        .querySelectorAll('.default-action')
+        .forEach(el => {
+            updateValue(el, state[el.id], false)
+        })
+      document
+        .querySelectorAll('.reg-action')
+        .forEach(el => {
+            let reg = el.attributes.reg?parseInt(el.attributes.reg.nodeValue):0;
+            if(reg == 0){
+              return;
+            }
+            updateRegValue(el, state['0x'+reg.toString(16)], false)
+        })
+    })
+
+  const view = document.getElementById('stream')
+  const viewContainer = document.getElementById('stream-container')
+  const stillButton = document.getElementById('get-still')
+  const streamButton = document.getElementById('toggle-stream')
+  const enrollButton = document.getElementById('face_enroll')
+  const closeButton = document.getElementById('close-stream')
+  const saveButton = document.getElementById('save-still')
+  const ledGroup = document.getElementById('led-group')
+
+  const detect = document.getElementById('face_detect')
+  const recognize = document.getElementById('face_recognize')
+
+
+  const stopStream = () => {
+    window.stop();
+    streamButton.innerHTML = 'Start Stream'
+  }
+
+  const startStream = () => {
+    view.src = `${streamUrl}/stream`
+    show(viewContainer)
+    streamButton.innerHTML = 'Stop Stream'
+  }
+
+  // Attach actions to buttons
+  stillButton.onclick = () => {
+    stopStream()
+    view.src = `${baseHost}/capture?_cb=${Date.now()}`
+    show(viewContainer)
+  }
+
+  closeButton.onclick = () => {
+    stopStream()
+    hide(viewContainer)
+  }
+
+  streamButton.onclick = () => {
+    const streamEnabled = streamButton.innerHTML === 'Stop Stream'
+    if (streamEnabled) {
+      stopStream()
+    } else {
+      startStream()
+    }
+  }
+
+  enrollButton.onclick = () => {
+    updateConfig(enrollButton)
+  }
+	    
+  saveButton.onclick = () => {
+    var canvas = document.createElement("canvas");
+    canvas.width = view.width;
+    canvas.height = view.height;
+    document.body.appendChild(canvas);
+    var context = canvas.getContext('2d');
+    context.drawImage(view,0,0);
+    try {
+      var dataURL = canvas.toDataURL('image/jpeg');
+      saveButton.href = dataURL;
+      var d = new Date();
+      saveButton.download = d.getFullYear() + ("0"+(d.getMonth()+1)).slice(-2) + ("0" + d.getDate()).slice(-2) + ("0" + d.getHours()).slice(-2) + ("0" + d.getMinutes()).slice(-2) + ("0" + d.getSeconds()).slice(-2) + ".jpg";
+    } catch (e) {
+      console.error(e);
+    }
+    canvas.parentNode.removeChild(canvas);
+  }
+
+  // Attach default on change action
+  document
+    .querySelectorAll('.default-action')
+    .forEach(el => {
+      el.onchange = () => updateConfig(el)
+    })
+
+  // Custom actions
+  // Detection and framesize
+  const framesize = document.getElementById('framesize')
+
+  framesize.onchange = () => {
+    updateConfig(framesize)
+    if (framesize.value > 5) {
+      updateValue(detect, false)
+      updateValue(recognize, false)
+    }
+  }
+
+  detect.onchange = () => {
+    if (framesize.value > 5) {
+      alert("Please select CIF or lower resolution before enabling this feature!");
+      updateValue(detect, false)
+      return;
+    }
+    updateConfig(detect)
+    if (!detect.checked) {
+      disable(enrollButton)
+      updateValue(recognize, false)
+    }
+  }
+
+  recognize.onchange = () => {
+    if (framesize.value > 5) {
+      alert("Please select CIF or lower resolution before enabling this feature!");
+      updateValue(recognize, false)
+      return;
+    }
+    updateConfig(recognize)
+    if (recognize.checked) {
+      enable(enrollButton)
+      updateValue(detect, true)
+    } else {
+      disable(enrollButton)
+    }
+  }
+})
+        </script>
+    </body>
+</html>
