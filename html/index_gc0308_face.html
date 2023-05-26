@@ -389,7 +389,6 @@
                 <div id="sidebar">
                     <input type="checkbox" id="nav-toggle-cb" checked="checked">
                     <nav id="menu">
-
                         <div class="input-group" id="framesize-group">
                             <label for="framesize">Resolution</label>
                             <!-- <select id="framesize" class="default-action"> -->
@@ -405,10 +404,10 @@
                                 <option value="0">96x96</option>
                             </select>
                         </div>
-
+			
 			<hr style="width:75%">
 
-			<div class="input-group" id="contrast-group">
+                        <div class="input-group" id="contrast-group">
                             <label for="contrast">Contrast</label>
                             <div class="range-min">-2</div>
                             <input type="range" id="contrast" min="0" max="127" value="64" class="default-action">
@@ -421,8 +420,8 @@
                             <input type="range" id="saturation" min="0" max="255" value="64" class="default-action">
                             <div class="range-max">255</div>
                         </div>
-			
-                        <div class="input-group" id="special_effect-group">
+
+			<div class="input-group" id="special_effect-group">
                             <label for="special_effect">Special Effect</label>
                             <select id="special_effect" class="default-action">
                                 <option value="0" selected="selected">No Effect</option>
@@ -434,7 +433,6 @@
                                 <option value="6">Sepia</option>
                             </select>
                         </div>
-
                         <div class="input-group" id="wb_mode-group">
                             <label for="wb_mode">WB Mode</label>
                             <select id="wb_mode" class="default-action">
@@ -445,14 +443,12 @@
                                 <option value="4">Home</option>
                             </select>
                         </div>
-
                         <div class="input-group" id="agc_gain-group">
                             <label for="agc_gain">Gain</label>
                             <div class="range-min">0x</div>
                             <input type="range" id="agc_gain" min="0" max="63" value="20" class="default-action">
                             <div class="range-max">4x</div>
                         </div>
-
                         <div class="input-group" id="hmirror-group">
                             <label for="hmirror">H-Mirror</label>
                             <div class="switch">
@@ -477,13 +473,28 @@
 
 			<hr style="width:75%">
 
+                        <div class="input-group" id="face_detect-group">
+                            <label for="face_detect">Face Detection</label>
+                            <div class="switch">
+                                <input id="face_detect" type="checkbox" class="default-action">
+                                <label class="slider" for="face_detect"></label>
+                            </div>
+                        </div>
+                        <div class="input-group" id="face_recognize-group">
+                            <label for="face_recognize">Face Recognition</label>
+                            <div class="switch">
+                                <input id="face_recognize" type="checkbox" class="default-action">
+                                <label class="slider" for="face_recognize"></label>
+                            </div>
+                        </div>
+
+			<hr style="width:75%">
+
 			<section id="buttons">
                             <button id="get-still">Get Still</button>
                             <button id="toggle-stream">Start Stream</button>
-			    <button id="toggle-qr">Start Scan QR</button>
-                            <!-- <button id="face_enroll" class="disabled" disabled="disabled">Enroll Face</button> -->
+                            <button id="face_enroll" class="disabled" disabled="disabled">Enroll Face</button>
                         </section>
-
 
                         <div style="margin-top: 8px;"><center><span style="font-weight: bold;">Advanced Settings</span></center></div>
                         <hr style="width:100%">
@@ -723,6 +734,8 @@ document.addEventListener('DOMContentLoaded', function (event) {
         }
       } else if(el.id === "awb_gain"){
         value ? show(wb) : hide(wb)
+      } else if(el.id === "face_recognize") {
+	value ? enable(enrollButton) : disable(enrollButton)
       }
     }
   }
@@ -787,10 +800,14 @@ document.addEventListener('DOMContentLoaded', function (event) {
   const viewContainer = document.getElementById('stream-container')
   const stillButton = document.getElementById('get-still')
   const streamButton = document.getElementById('toggle-stream')
-  const qrButton = document.getElementById('toggle-qr')
+  const enrollButton = document.getElementById('face_enroll')
   const closeButton = document.getElementById('close-stream')
   const saveButton = document.getElementById('save-still')
   const ledGroup = document.getElementById('led-group')
+
+  const detect = document.getElementById('face_detect')
+  const recognize = document.getElementById('face_recognize')
+
 
   const stopStream = () => {
     window.stop();
@@ -803,29 +820,15 @@ document.addEventListener('DOMContentLoaded', function (event) {
     streamButton.innerHTML = 'Stop Stream'
   }
 
-  const stopQR = () => {
-    window.stop();
-    qrButton.innerHTML = 'Start Scan QR'
-  }
-
-  const startQR = () => {
-    view.src = `${streamUrl}/qr`
-    show(viewContainer)
-    qrButton.innerHTML = 'Stop Scan QR'
-  }
-
-    
   // Attach actions to buttons
   stillButton.onclick = () => {
     stopStream()
-    stopQR();
     view.src = `${baseHost}/capture?_cb=${Date.now()}`
     show(viewContainer)
   }
 
   closeButton.onclick = () => {
     stopStream()
-    stopQR();
     hide(viewContainer)
   }
 
@@ -834,21 +837,14 @@ document.addEventListener('DOMContentLoaded', function (event) {
     if (streamEnabled) {
       stopStream()
     } else {
-      stopQR();
       startStream()
     }
   }
 
-  qrButton.onclick = () => {
-    const qrEnabled = qrButton.innerHTML === 'Stop Scan QR'
-    if (qrEnabled) {
-      stopQR()
-    } else {
-      stopStream()
-      startQR()
-    }
+  enrollButton.onclick = () => {
+    updateConfig(enrollButton)
   }
-
+	    
   saveButton.onclick = () => {
     var canvas = document.createElement("canvas");
     canvas.width = view.width;
@@ -886,17 +882,34 @@ document.addEventListener('DOMContentLoaded', function (event) {
     }
   }
 
-// AWB
-/*
-  const awb = document.getElementById('awb_gain')
-  const wb = document.getElementById('wb_mode-group')
-  awb.onchange = () => {
-    updateConfig(awb)
-    awb.checked ? show(wb) : hide(wb)
+  detect.onchange = () => {
+    if (framesize.value > 5) {
+      alert("Please select CIF or lower resolution before enabling this feature!");
+      updateValue(detect, false)
+      return;
+    }
+    updateConfig(detect)
+    if (!detect.checked) {
+      disable(enrollButton)
+      updateValue(recognize, false)
+    }
   }
-*/
-})
 
+  recognize.onchange = () => {
+    if (framesize.value > 5) {
+      alert("Please select CIF or lower resolution before enabling this feature!");
+      updateValue(recognize, false)
+      return;
+    }
+    updateConfig(recognize)
+    if (recognize.checked) {
+      enable(enrollButton)
+      updateValue(detect, true)
+    } else {
+      disable(enrollButton)
+    }
+  }
+})
         </script>
     </body>
 </html>

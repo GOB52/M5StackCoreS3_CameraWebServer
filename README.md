@@ -2,16 +2,18 @@
 
 [English](README.en.md)
 
-<img src="https://user-images.githubusercontent.com/26270227/239725404-c5dd33c4-c511-4d05-a192-3d184ef4de8b.png" width="480">
+<img src="https://user-images.githubusercontent.com/26270227/239725404-c5dd33c4-c511-4d05-a192-3d184ef4de8b.png" width="320"><img src="https://github.com/GOB52/M5StackCoreS3_CameraWebServer/assets/26270227/fb2e7edb-c2fe-4caf-b585-b2f6728df559" width="320">
+
 
 ## 概要
 [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32) の [CameraWebServer](https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Camera/CameraWebServer) を M5Stack CoreS3 向けに移植した物です。  
-WiFi 経由でブラウザから CoreS3 へアクセスし、カメラの制御とストリーミング受信を行います。
+WiFi 経由でブラウザから CoreS3 へアクセスし、カメラの制御とストリーミング受信を行います。  
+QR 識別も行えます。
 
 
 ## 必要な物
 * [M5Unified](https://github.com/m5stack/M5Unified)
-* [es32-camera](https://github.com/espressif/esp32-camera/tree/master)  
+* [esp32-camera](https://github.com/espressif/esp32-camera/tree/master)  
 platformio で platform = espressif32, framework = arduino なら同梱なので必要無し
 * [gob_GC0308](https://github.com/GOB52/gob_GC0308)
 * WiFi 接続可能な環境
@@ -19,9 +21,8 @@ platformio で platform = espressif32, framework = arduino なら同梱なので
 ## ビルド種別
 |Env|説明|
 |---|---|
-|release|基本設定|
+|release|基本設定と QR 識別|
 |release_face|顔検出、認識あり|
-
 
 ## 使い方
 実行すると、画面とシリアルモニタに接続先 IP アドレスが表示されます。  
@@ -50,6 +51,8 @@ platformio で platform = espressif32, framework = arduino なら同梱なので
 現在設定されているカメラの解像度を表示しています。解像度変更はできません。
 * Contrast  
 コントラストを変更します。
+* Saturation  
+彩度を変更します。
 * Special Effect  
 エフェクトをかけます。
 
@@ -97,6 +100,8 @@ platformio で platform = espressif32, framework = arduino なら同梱なので
 * Enroll Face  
 カメラに写っている顔を登録します。  
 登録すると Face Recogintion ON の時に侵入者(赤枠)扱いになりません。
+* Start/Stop Scan QR  
+QR 識別の開始/終了。
 
 * Save  
 受信画像をダウンロードします。
@@ -114,4 +119,5 @@ platformio で platform = espressif32, framework = arduino なら同梱なので
 * M5Unified ベースで動作するようにした。
 * GC0308 用に html を修正した。
 * GC0308 に無い機能を割愛した。
+* QR 識別機能を追加した
  

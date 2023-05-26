@@ -60,13 +60,18 @@ void setup()
     ccfg.xclk_freq_hz = 20000000;
     ccfg.ledc_timer = LEDC_TIMER_0;
     ccfg.ledc_channel = LEDC_CHANNEL_0;
+
     ccfg.pixel_format = PIXFORMAT_RGB565;
-    //ccfg.frame_size = FRAMESIZE_VGA; // 640x480
+    //ccfg.pixel_format = PIXFORMAT_YUV422;
+
+    ////ccfg.frame_size = FRAMESIZE_VGA; // 640x480
     ccfg.frame_size = FRAMESIZE_QVGA; // 320x240
     //ccfg.frame_size = FRAMESIZE_240X240,  // 240x240
     //ccfg.frame_size = FRAMESIZE_QQVGA; // 160x120
+
     ccfg.fb_count = 1;
     //ccfg.fb_count = 2; // CPU Loads too much but faster
+
     ccfg.grab_mode = CAMERA_GRAB_WHEN_EMPTY;    
     ccfg.sccb_i2c_port = M5.In_I2C.getPort(); // Using initialized I2C
 
@@ -79,7 +84,7 @@ void setup()
         delay(1000);
         abort();
     }
-    if(!gob::GC0308::complementDriver())
+    if(!goblib::camera::GC0308::complementDriver())
     {
         M5_LOGE("Failed to complement GC0308");
     }

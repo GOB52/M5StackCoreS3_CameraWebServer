@@ -21,6 +21,9 @@
 #include <fb_gfx.h>
 #include "index_gc0308_html.hpp"
 
+#include <WString.h>
+#include <gob_qr_code_recognizer.hpp>
+
 #if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 # include "esp32-hal-log.h"
 #endif
@@ -145,8 +148,7 @@ static int ra_filter_run(ra_filter_t *filter, int value)
 }
 #endif
 
-#if CONFIG_ESP_FACE_DETECT_ENABLED
-# if CONFIG_ESP_FACE_RECOGNITION_ENABLED
+
 static void rgb_print(fb_data_t *fb, uint32_t color, const char *str)
 {
     fb_gfx_print(fb, (fb->width - (strlen(str) * 14)) / 2, 10, color, str);
@@ -180,8 +182,8 @@ static int rgb_printf(fb_data_t *fb, uint32_t color, const char *format, ...)
     }
     return len;
 }
-# endif
 
+#if CONFIG_ESP_FACE_DETECT_ENABLED
 static void draw_face_boxes(fb_data_t *fb, std::list<dl::detect::result_t> *results, int face_id)
 {
     int x, y, w, h;
@@ -791,8 +793,10 @@ static esp_err_t cmd_handler(httpd_req_t *req)
     /*
     else if (!strcmp(variable, "brightness"))
         res = s->set_brightness(s, val);
+    */
     else if (!strcmp(variable, "saturation"))
         res = s->set_saturation(s, val);
+    /*
     else if (!strcmp(variable, "gainceiling"))
         res = s->set_gainceiling(s, (gainceiling_t)val);
     */
@@ -868,6 +872,7 @@ static esp_err_t cmd_handler(httpd_req_t *req)
     }
 
     if (res < 0) {
+        log_e("Failed [%s] %d", variable, res);
         return httpd_resp_send_500(req);
     }
 
@@ -1011,11 +1016,152 @@ static esp_err_t index_handler(httpd_req_t *req)
     }
 }
 
+static void draw_qr_box(fb_data_t* fb, const struct quirc_point corners[4], uint16_t clr)
+{
+    int32_t left{(int32_t)fb->width}, right{0}, top{(int32_t)fb->height}, bottom{0};
+    for(int_fast8_t i=0; i < 4; ++i)
+    {
+        if(corners[i].x < left) { left = corners[i].x; }
+        if(corners[i].y < top) { top = corners[i].y; }
+        if(corners[i].x > right) { right = corners[i].x; }
+        if(corners[i].y > bottom) { bottom = corners[i].y; }
+    }
+    if(left < 0) { left = 0; }
+    if(top < 0) { top = 0; }
+    if(right >= fb->width) { right = fb->width - 1; }
+    if(bottom >= fb->height) { bottom = fb->height - 1; }
+
+    int32_t w = right - left + 1;
+    int32_t h = bottom - top + 1;
+    fb_gfx_drawFastHLine(fb, left, top,         w, clr);
+    fb_gfx_drawFastHLine(fb, left, top + h - 1, w, clr);
+    fb_gfx_drawFastVLine(fb, left,         top, h, clr);
+    fb_gfx_drawFastVLine(fb, left + w - 1, top, h, clr);
+}
+
+goblib::camera::QRCodeRecognizer recQR{};
+static esp_err_t qr_handler(httpd_req_t *req)
+{
+    camera_fb_t *fb = NULL;
+    struct timeval _timestamp;
+    esp_err_t res = ESP_OK;
+    size_t _jpg_buf_len = 0;
+    uint8_t *_jpg_buf = NULL;
+    char *part_buf[128];
+    int64_t fr_start = 0;
+    int64_t qr_end{};
+
+    res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
+    if (res != ESP_OK)
+    {
+        return res;
+    }
+
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    httpd_resp_set_hdr(req, "X-Framerate", "60");
+
+    while (true)
+    {
+        fb = esp_camera_fb_get();
+        if (!fb)
+        {
+            log_e("Camera capture failed");
+            res = ESP_FAIL;
+        }
+        else
+        {
+            _timestamp.tv_sec = fb->timestamp.tv_sec;
+            _timestamp.tv_usec = fb->timestamp.tv_usec;
+            fr_start = esp_timer_get_time();
+
+            bool b = recQR.scan(fb);
+            qr_end = esp_timer_get_time();
+            if(b)
+            {
+                int_fast8_t num = recQR.resultSize();
+                for(int_fast8_t i =0; i < num; ++i)
+                {
+                    auto pr = recQR.getResult(i);
+
+                    fb_data_t rfb;
+                    rfb.width = fb->width;
+                    rfb.height = fb->height;
+                    rfb.data = fb->buf;
+                    rfb.bytes_per_pixel = 2;
+                    rfb.format = FB_RGB565;
+                    draw_qr_box(&rfb, pr->corners, 0x001F/*Blue*/);
+                    String s(pr->data.payload, pr->data.payload_len);
+                    rgb_printf(&rfb, 0x001F, "%s", s.substring(0,16).c_str());
+                    log_i("QR:%d [%s]", i, s.c_str());
+                }
+            }
+
+            if (fb->format != PIXFORMAT_JPEG)
+            {
+                bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
+                esp_camera_fb_return(fb);
+                fb = NULL;
+                if (!jpeg_converted)
+                {
+                    log_e("JPEG compression failed");
+                    res = ESP_FAIL;
+                }
+            }
+            else
+            {
+                _jpg_buf_len = fb->len;
+                _jpg_buf = fb->buf;
+            }
+        }
+        if (res == ESP_OK)
+        {
+            res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));
+        }
+        if (res == ESP_OK)
+        {
+            size_t hlen = snprintf((char *)part_buf, 128, _STREAM_PART, _jpg_buf_len, _timestamp.tv_sec, _timestamp.tv_usec);
+            res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
+        }
+        if (res == ESP_OK)
+        {
+            res = httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
+        }
+        if (fb)
+        {
+            esp_camera_fb_return(fb);
+            fb = NULL;
+            _jpg_buf = NULL;
+        }
+        else if (_jpg_buf)
+        {
+            free(_jpg_buf);
+            _jpg_buf = NULL;
+        }
+        if (res != ESP_OK)
+        {
+            log_e("Send frame failed");
+            break;
+        }
+
+        int64_t fr_end = esp_timer_get_time();
+        int32_t frame_time = fr_end - fr_start;
+        frame_time /= 1000;
+        int32_t qr_time = qr_end - fr_start;
+        qr_time /= 1000;
+        log_i("MJPG: %uB %ums (%.1ffps) QR %ums",
+              (uint32_t)(_jpg_buf_len),
+              frame_time, 1000.0f / frame_time,
+              qr_time, 1000.0f / qr_time);
+    }
+    return res;
+}
+
 void startCameraServer()
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.max_uri_handlers = 16;
-
+    config.stack_size = 1024 * 32; // For QR recognize
+    
     httpd_uri_t index_uri = {
         .uri = "/",
         .method = HTTP_GET,
@@ -1120,6 +1266,20 @@ void startCameraServer()
 #endif
     };
 
+    httpd_uri_t qr_uri = {
+        .uri = "/qr",
+        .method = HTTP_GET,
+        .handler = qr_handler,
+        .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+        ,
+        .is_websocket = true,
+        .handle_ws_control_frames = false,
+        .supported_subprotocol = NULL
+#endif
+    };
+
+    
     ra_filter_init(&ra_filter, 20);
 
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
@@ -1128,6 +1288,7 @@ void startCameraServer()
     recognizer.set_ids_from_flash();
 #endif
 
+    
     log_i("Starting web server on port: '%d'", config.server_port);
     if (httpd_start(&camera_httpd, &config) == ESP_OK)
     {
@@ -1147,6 +1308,7 @@ void startCameraServer()
     if (httpd_start(&stream_httpd, &config) == ESP_OK)
     {
         httpd_register_uri_handler(stream_httpd, &stream_uri);
+        httpd_register_uri_handler(stream_httpd, &qr_uri);
     }
 }
 
