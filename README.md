@@ -100,7 +100,7 @@ platformio で platform = espressif32, framework = arduino なら同梱なので
 * Enroll Face  
 カメラに写っている顔を登録します。  
 登録すると Face Recogintion ON の時に侵入者(赤枠)扱いになりません。
-* Start/Stop Scan QR
+* Start/Stop Scan QR  
 QR 識別の開始/終了。
 
 * Save  
