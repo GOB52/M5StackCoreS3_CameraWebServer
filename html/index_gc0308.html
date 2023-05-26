@@ -405,13 +405,23 @@
                                 <option value="0">96x96</option>
                             </select>
                         </div>
-                        <div class="input-group" id="contrast-group">
+
+			<hr style="width:75%">
+
+			<div class="input-group" id="contrast-group">
                             <label for="contrast">Contrast</label>
                             <div class="range-min">-2</div>
                             <input type="range" id="contrast" min="0" max="127" value="64" class="default-action">
                             <div class="range-max">2</div>
                         </div>
 
+                        <div class="input-group" id="saturation-group">
+                            <label for="saturation">Saturation</label>
+                            <div class="range-min">0</div>
+                            <input type="range" id="saturation" min="0" max="255" value="64" class="default-action">
+                            <div class="range-max">255</div>
+                        </div>
+			
                         <div class="input-group" id="special_effect-group">
                             <label for="special_effect">Special Effect</label>
                             <select id="special_effect" class="default-action">
@@ -464,9 +474,13 @@
                                 <label class="slider" for="colorbar"></label>
                             </div>
                         </div>
-                        <section id="buttons">
+
+			<hr style="width:75%">
+
+			<section id="buttons">
                             <button id="get-still">Get Still</button>
                             <button id="toggle-stream">Start Stream</button>
+			    <button id="toggle-qr">Start Scan QR</button>
                             <!-- <button id="face_enroll" class="disabled" disabled="disabled">Enroll Face</button> -->
                         </section>
 
@@ -773,6 +787,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
   const viewContainer = document.getElementById('stream-container')
   const stillButton = document.getElementById('get-still')
   const streamButton = document.getElementById('toggle-stream')
+  const qrButton = document.getElementById('toggle-qr')
   const closeButton = document.getElementById('close-stream')
   const saveButton = document.getElementById('save-still')
   const ledGroup = document.getElementById('led-group')
@@ -788,15 +803,29 @@ document.addEventListener('DOMContentLoaded', function (event) {
     streamButton.innerHTML = 'Stop Stream'
   }
 
+  const stopQR = () => {
+    window.stop();
+    qrButton.innerHTML = 'Start Scan QR'
+  }
+
+  const startQR = () => {
+    view.src = `${streamUrl}/qr`
+    show(viewContainer)
+    qrButton.innerHTML = 'Stop Scan QR'
+  }
+
+    
   // Attach actions to buttons
   stillButton.onclick = () => {
     stopStream()
+    stopQR();
     view.src = `${baseHost}/capture?_cb=${Date.now()}`
     show(viewContainer)
   }
 
   closeButton.onclick = () => {
     stopStream()
+    stopQR();
     hide(viewContainer)
   }
 
@@ -805,7 +834,18 @@ document.addEventListener('DOMContentLoaded', function (event) {
     if (streamEnabled) {
       stopStream()
     } else {
+      stopQR();
       startStream()
+    }
+  }
+
+  qrButton.onclick = () => {
+    const qrEnabled = qrButton.innerHTML === 'Stop Scan QR'
+    if (qrEnabled) {
+      stopQR()
+    } else {
+      stopStream()
+      startQR()
     }
   }
 
