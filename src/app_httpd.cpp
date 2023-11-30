@@ -1079,6 +1079,7 @@ static esp_err_t qr_handler(httpd_req_t *req)
             if(b)
             {
                 int_fast8_t num = recQR.resultSize();
+                log_i("Detect QR:%u", num);
                 for(int_fast8_t i =0; i < num; ++i)
                 {
                     auto pr = recQR.getResult(i);

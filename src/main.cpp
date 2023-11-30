@@ -15,15 +15,14 @@
 // Pin settings
 #define CAM_PIN_PWDN    -1
 #define CAM_PIN_RESET   -1
-#define CAM_PIN_XCLK    -1
-#define CAM_PIN_SIOD    -1
-#define CAM_PIN_SIOC    -1
+#define CAM_PIN_XCLK    2
+#define CAM_PIN_SIOD    12
+#define CAM_PIN_SIOC    11
 #define CAM_PIN_D7      47
 #define CAM_PIN_D6      48
 #define CAM_PIN_D5      16
 #define CAM_PIN_D4      15
 #define CAM_PIN_D3      42
-#define CAM_PIN_D4      15
 #define CAM_PIN_D2      41
 #define CAM_PIN_D1      40
 #define CAM_PIN_D0      39
@@ -31,7 +30,82 @@
 #define CAM_PIN_HREF    38
 #define CAM_PIN_PCLK    45
 
-extern void startCameraServer(); // server.cpp
+extern void startCameraServer(); // app_httpd.cpp
+
+//#define USING_EXISTING_I2C
+
+#if defined(USING_EXISTING_I2C)
+static camera_config_t camera_config =
+{
+    .pin_pwdn  = CAM_PIN_PWDN;
+    .pin_reset = CAM_PIN_RESET;
+    .pin_xclk = CAM_PIN_XCLK;
+    //.pin_xclk = -1;
+    //.pin_sccb_sda = CAM_PIN_SIOD;
+    .pin_sccb_sda = -1;
+    //.pin_sccb_scl = CAM_PIN_SIOC;
+    .pin_sccb_scl = -1;
+
+    .pin_d7 = CAM_PIN_D7;
+    .pin_d6 = CAM_PIN_D6;
+    .pin_d5 = CAM_PIN_D5;
+    .pin_d4 = CAM_PIN_D4;
+    .pin_d3 = CAM_PIN_D3;
+    .pin_d2 = CAM_PIN_D2;
+    .pin_d1 = CAM_PIN_D1;
+    .pin_d0 = CAM_PIN_D0;
+    .pin_vsync = CAM_PIN_VSYNC;
+    .pin_href = CAM_PIN_HREF;
+    .pin_pclk = CAM_PIN_PCLK;
+
+    .xclk_freq_hz = 20000000;
+    .ledc_timer = LEDC_TIMER_0;
+    .ledc_channel = LEDC_CHANNEL_0;
+    .fb_location  = CAMERA_FB_IN_PSRAM,
+    .pixel_format = PIXFORMAT_RGB565;
+    //.pixel_format = PIXFORMAT_YUV422;
+    //.frame_size = FRAMESIZE_VGA; // 640x480
+    //.frame_size = FRAMESIZE_QVGA; // 320x240
+    //.frame_size = FRAMESIZE_240X240,  // 240x240
+    //.frame_size = FRAMESIZE_QQVGA; // 160x120
+    .jpeg_quality = 0,
+    //.fb_count = 1;
+    .fb_count = 2; // CPU Loads too much but faster
+    .grab_mode = CAMERA_GRAB_WHEN_EMPTY;
+    .sccb_i2c_port = M5.In_I2C.getPort()
+};
+#else
+static camera_config_t camera_config =
+{
+    .pin_pwdn     = -1,
+    .pin_reset    = -1,
+    .pin_xclk     = 2,
+    .pin_sscb_sda = 12,
+    .pin_sscb_scl = 11,
+    .pin_d7 = 47,
+    .pin_d6 = 48,
+    .pin_d5 = 16,
+    .pin_d4 = 15,
+    .pin_d3 = 42,
+    .pin_d2 = 41,
+    .pin_d1 = 40,
+    .pin_d0 = 39,
+    .pin_vsync = 46,
+    .pin_href  = 38,
+    .pin_pclk  = 45,
+    .xclk_freq_hz = 20000000,
+    .ledc_timer   = LEDC_TIMER_0,
+    .ledc_channel = LEDC_CHANNEL_0,
+    .pixel_format = PIXFORMAT_RGB565,
+    //.frame_size   = FRAMESIZE_QQVGA,
+    .frame_size   = FRAMESIZE_QVGA,
+    .jpeg_quality = 0,
+    .fb_count     = 2,
+    .fb_location  = CAMERA_FB_IN_PSRAM,
+    .grab_mode    = CAMERA_GRAB_WHEN_EMPTY,
+    .sccb_i2c_port = -1,
+};
+#endif
 
 void setup()
 {
@@ -39,49 +113,19 @@ void setup()
     M5.begin();
     M5.Log.setEnableColor(m5::log_target_serial, false);
 
-    // Camera
-    camera_config_t ccfg{};
-    ccfg.pin_pwdn  = CAM_PIN_PWDN;
-    ccfg.pin_reset = CAM_PIN_RESET;
-    ccfg.pin_xclk = CAM_PIN_XCLK;
-    ccfg.pin_sccb_sda = CAM_PIN_SIOD;
-    ccfg.pin_sccb_scl = CAM_PIN_SIOC;
-    ccfg.pin_d7 = CAM_PIN_D7;
-    ccfg.pin_d6 = CAM_PIN_D6;
-    ccfg.pin_d5 = CAM_PIN_D5;
-    ccfg.pin_d4 = CAM_PIN_D4;
-    ccfg.pin_d3 = CAM_PIN_D3;
-    ccfg.pin_d2 = CAM_PIN_D2;
-    ccfg.pin_d1 = CAM_PIN_D1;
-    ccfg.pin_d0 = CAM_PIN_D0;
-    ccfg.pin_vsync = CAM_PIN_VSYNC;
-    ccfg.pin_href = CAM_PIN_HREF;
-    ccfg.pin_pclk = CAM_PIN_PCLK;
-    ccfg.xclk_freq_hz = 20000000;
-    ccfg.ledc_timer = LEDC_TIMER_0;
-    ccfg.ledc_channel = LEDC_CHANNEL_0;
-
-    ccfg.pixel_format = PIXFORMAT_RGB565;
-    //ccfg.pixel_format = PIXFORMAT_YUV422;
-
-    ////ccfg.frame_size = FRAMESIZE_VGA; // 640x480
-    ccfg.frame_size = FRAMESIZE_QVGA; // 320x240
-    //ccfg.frame_size = FRAMESIZE_240X240,  // 240x240
-    //ccfg.frame_size = FRAMESIZE_QQVGA; // 160x120
-
-    ccfg.fb_count = 1;
-    //ccfg.fb_count = 2; // CPU Loads too much but faster
-
-    ccfg.grab_mode = CAMERA_GRAB_WHEN_EMPTY;    
-    ccfg.sccb_i2c_port = M5.In_I2C.getPort(); // Using initialized I2C
-
+    M5.Display.clear(TFT_ORANGE);
+#if defined(USING_EXISTING_I2C)
+    camera_config.sccb_i2c_port = M5.In_I2C.getPort();
     esp_err_t err = esp_camera_init(&ccfg);
+#else
+    M5.In_I2C.release();
+    esp_err_t err = esp_camera_init(&camera_config);
+#endif
     if (err != ESP_OK)
     {
-        M5.Display.clear(TFT_RED);
-        M5.Display.setCursor(0,0);
+        M5.Display.clear(TFT_BLUE);
         M5_LOGE("Failed to init camera:%d", err);
-        delay(1000);
+        delay(1000 * 10);
         abort();
     }
     if(!goblib::camera::GC0308::complementDriver())
@@ -89,7 +133,6 @@ void setup()
         M5_LOGE("Failed to complement GC0308");
     }
 
-    M5.Display.clear(TFT_DARKGREEN);
     // WiFi
     WiFi.begin(); // // Connects to credential stored in the hardware.
     //WiFi.begin("Your SSID", "Your password"); // or use it.
@@ -113,10 +156,9 @@ void setup()
 
     // Server
     startCameraServer();
-    M5.Display.clear(0);
     M5_LOGI("Camera ready use: http;//%s to connect", WiFi.localIP().toString().c_str());
-    
-    M5.Log.setLogLevel(m5::log_target_display,  ESP_LOG_NONE); // Disable output to display
+
+    M5.Display.clear(TFT_DARKGREEN);
 }
 
 void loop()
